@@ -1,0 +1,15 @@
+train_net: "./proto/E2Nnet_sml_train.prototxt"
+test_net: "./proto/E2Nnet_sml_test.prototxt"
+test_iter: 100
+test_interval: 10
+base_lr: 0.01
+max_iter: 1000
+lr_policy: "step"
+gamma: 0.1
+momentum: 0.9
+weight_decay: 0.0005
+stepsize: 100000
+snapshot: 50
+snapshot_prefix: "./snapshot/E2Nnet_sml"
+solver_mode: GPU
+random_seed: 333

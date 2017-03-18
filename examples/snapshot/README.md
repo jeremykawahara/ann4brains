@@ -1,0 +1,1 @@
+# Store caffe model snapshots
