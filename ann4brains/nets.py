@@ -216,7 +216,7 @@ class BrainNetCNN(BaseNet):
         n = caffe.NetSpec()
 
         if mode == 'deploy':
-            n.data = L.DummyData(shape=dict(dim=pars['deploy_dims']))
+            n.data = L.DummyData(shape=[dict(dim=pars['deploy_dims'])])
         elif mode == 'train':
             n.data, n.label = L.HDF5Data(batch_size=pars['train_batch_size'], source=hdf5_data, ntop=pars['ntop'])
         else:  # Test.
