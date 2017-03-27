@@ -40,4 +40,4 @@ E2Nnet_sml.fit(set_mode='cpu') # or set_mode='gpu'
 preds = E2Nnet_sml.predict(test_data['data'])
 ```
 
-If you prefer to work directly with [Caffe](https://github.com/BVLC/caffe) and not use this wrapper, you modify the [example prototxt files](https://github.com/jeremykawahara/ann4brains/tree/master/examples/proto) that implement the E2E and E2N filters.
+If you prefer to work directly with [Caffe](https://github.com/BVLC/caffe) and not use this wrapper, you can modify the [example prototxt files](https://github.com/jeremykawahara/ann4brains/tree/master/examples/proto) that implement the E2E and E2N filters.
