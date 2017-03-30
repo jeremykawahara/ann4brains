@@ -15,29 +15,21 @@ jupyter notebook ann4brains/examples/brainnetcnn.ipynb
 Here's a fully working, minimal ["hello world" example here](https://github.com/jeremykawahara/ann4brains/blob/master/examples/helloworld.ipynb),
 
 ```python
-import os
+import os, sys
 import numpy as np
-import sys
 from scipy.stats.stats import pearsonr
 import caffe
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), '..'))) # To import ann4brains
 from ann4brains.synthetic.injury import ConnectomeInjury
 from ann4brains.nets import BrainNetCNN
-
 np.random.seed(seed=333) # To reproduce results.
 
-# Generate train/test synthetic data.
-injury = ConnectomeInjury()
+injury = ConnectomeInjury() # Generate train/test synthetic data.
 x_train, y_train = injury.generate_injury()
 x_test, y_test = injury.generate_injury()
 x_valid, y_valid = injury.generate_injury()
 
-# Unique name for the model
-net_name = 'hello_world'
-
-# We specify the architecture like this.
-hello_arch = [
+hello_arch = [ # We specify the architecture like this.
     ['e2n', {'num_output': 16,  # e2n layer with 16 filters.
              'kernel_h': x_train.shape[2], 
              'kernel_w': x_train.shape[3]}], # Same dimensions as spatial inputs.
@@ -48,16 +40,10 @@ hello_arch = [
     ['out',     {'num_output': 1}]  # Output layer with num_outs nodes as outputs.
 ]
 
-# Create BrainNetCNN model
-hello_net = BrainNetCNN(net_name, hello_arch)
+hello_net = BrainNetCNN('hello_world', hello_arch) # Create BrainNetCNN model
+hello_net.fit(x_train, y_train[:,0], x_valid, y_valid[:,0]) # Train (regress only on class 0)
+preds = hello_net.predict(x_test) # Predict labels of test data
 
-# Train the network (the synthetic data has 2 classes, but we use just the first class)
-hello_net.fit(x_train, y_train[:,0], x_valid, y_valid[:,0])
-
-# Predict labels of test data
-preds = hello_net.predict(x_test)
-
-print("Mean Absolute Difference:" , np.mean(np.abs(preds-y_test[:,0])))
 print("Correlation:", pearsonr(preds, y_test[:,0])[0])
 ```
 
