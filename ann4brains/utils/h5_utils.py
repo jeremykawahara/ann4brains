@@ -14,7 +14,7 @@ def read_h5(file_name, field_names):
     return X
 
 
-def caffe_write_h5(database_filename, X, X_vec, Y):
+def caffe_write_h5(database_filename, X, Y):
     """Writes data to an h5 database in a format expected by caffe.
 
     Inputs,
@@ -24,18 +24,18 @@ def caffe_write_h5(database_filename, X, X_vec, Y):
     """
 
     # Make sure the same number of samples are passed in.
-    assert X.shape[0] == X_vec.shape[0] == Y.shape[0]
+    assert X.shape[0] == Y.shape[0]
 
     # Caffe requires the data and labels to be floats. To save space, might as well have them as float32s.
     assert X.dtype == np.float32
-    assert X_vec.dtype == np.float32
+    # assert X_vec.dtype == np.float32
     assert Y.dtype == np.float32
 
     # Writes data into the hdf5 database.
     # Note that your *.prototxt should match these names.
     with h5py.File(database_filename, 'w') as f:
         f['data'] = X
-        f['vec'] = X_vec
+        # f['vec'] = X_vec
         f['label'] = Y
 
     # Simply writes a single line that indicates to caffe where the database is stored.

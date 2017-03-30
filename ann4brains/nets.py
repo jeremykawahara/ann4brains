@@ -10,7 +10,7 @@ from utils import h5_utils
 import abc
 import six
 from scipy.stats.stats import pearsonr
-import matplotlib.pyplot as plt
+from utils.h5_utils import caffe_write_h5
 
 
 # ABC for python 2 and 3
@@ -18,7 +18,9 @@ import matplotlib.pyplot as plt
 @six.add_metaclass(abc.ABCMeta)
 class BaseNet(object):
 
-    def __init__(self, net_name, arch, hdf5_train="", hdf5_validate=""):
+    def __init__(self, net_name, arch, hdf5_train=None, hdf5_validate=None,
+                 dir_data='./generated_synthetic_data',  # Where to store the data.
+                 ):
         """Initialize the neural network.
 
         net_name : (string) unique name to identify the model.
@@ -29,14 +31,20 @@ class BaseNet(object):
         # Dictionary stores all the parameters for the optimization.
         self.pars = self.get_default_hyper_params(self.net_name)
         self.arch = arch
+        self.dir_data = dir_data
 
-        self.hdf5_train = hdf5_train
-        self.hdf5_validate = hdf5_validate
+        if hdf5_train is not None:
+            self.hdf5_train = hdf5_train
+            self.hdf5_validate = hdf5_validate
+            # Load the data to infer some of the parameters (otherwise you'll have to set them in self.pars)
+            data = h5_utils.read_h5(self.hdf5_validate, ['data', 'label'])
+            self.set_data_dependent_pars(data['data'])
 
-        # Load the validate data to infer some of the parameters (otherwise you'll have to set them in self.pars)
-        validate_data = h5_utils.read_h5(self.hdf5_validate, ['data', 'label'])
+    def set_data_dependent_pars(self, data):
+        """Set parameters that are dependent on the data."""
+
         # Assumes dimensions are [num_samples, num_channels, spatial, spatial].
-        data_dims = validate_data['data'].shape
+        data_dims = data.shape
 
         # Assumes dimensions are [batch_size, num_channels, spatial, spatial].
         self.pars['deploy_dims'] = [1, data_dims[1], data_dims[2], data_dims[3]]
@@ -88,7 +96,7 @@ class BaseNet(object):
         with open(self.solver_proto, "w") as f:
             f.write(str(s))
 
-    def fit(self, X=None, y=None, set_mode='gpu'):
+    def fit(self, x_train=None, y_train=None, x_valid=None, y_valid=None):
         """Train the model.
 
         For caffe, assumes that self.hdf5_train/validate have already been set.
@@ -96,6 +104,14 @@ class BaseNet(object):
         We keep the X,y to match the keras/sklearn api consistent and for future extensions that take in X,y.
         """
         if self.pars['dl_framework'] == 'caffe':
+            if x_train is not None:
+                # We are getting the raw data, so write the data to disk in a h5 format for caffe.
+                self.hdf5_train = os.path.abspath(os.path.join(self.dir_data, 'train.h5'))
+                self.hdf5_validate = os.path.abspath(os.path.join(self.dir_data, 'valid.h5'))
+                caffe_write_h5(self.hdf5_train, x_train, y_train)
+                caffe_write_h5(self.hdf5_validate, x_valid, y_valid)
+                self.set_data_dependent_pars(x_train)
+
             # Create the prototxt files
             self.create_prototxts(self.hdf5_train + '.txt', self.hdf5_validate + '.txt')
 
@@ -105,14 +121,14 @@ class BaseNet(object):
                                                                                         self.pars['test_interval'],
                                                                                         self.pars['test_iter'],
                                                                                         start_weights_name=None,
-                                                                                        set_mode=set_mode)
+                                                                                        set_mode=self.pars['hardware'])
 
-            # Then load the parameters for the last iteration.
+            # Then load the parameters from the last iteration.
             self.load_net(self.pars['max_iter'])
         else:
             print('No valid deep learning framework specified in hyper parameter \'dl_framework\'')
 
-    #def plot_error(self):
+    # def plot_error(self):
     #    fig = plt.figure()
     #    ax1 = fig.add_subplot(1, 1, 1)
     #    plot_err_iter(ax1, self.pars['net_name'], self.train_metrics[np.newaxis, :], self.test_metrics[np.newaxis, :],
@@ -181,21 +197,27 @@ class BaseNet(object):
         """Return a dict of the default neural network hyper-parameters"""
 
         pars = {}
-        pars['net_name'] = net_name
-        pars['dl_framework'] = 'caffe'
+        pars['net_name'] = net_name  # A unique name of the model.
+        pars['dl_framework'] = 'caffe'  # To use different backend neural network frameworks (only caffe for now).
+        pars['hardware'] = 'gpu'  # Either 'gpu' or 'cpu'
 
         # Solver parameters
-        pars['test_interval'] = 500  # Check the model over the test/validation data after this many iterations.
-        pars['max_iter'] = 100000  # Max number of iterations to train the model for.
-        pars['snapshot'] = 10000  # After how many iterations should we save the model.
-        pars['base_learning_rate'] = 0.01
-        pars['step_size'] = 100000
-        pars['learning_momentum'] = 0.9
-        pars['weight_decay'] = 0.0005
+        pars['test_interval'] = 100  # Check the model over the test/validation data after this many iterations.
+        pars['max_iter'] = 2000  # Max number of iterations to train the model for.
+        pars['snapshot'] = 1000  # After how many iterations should we save the model.
+        pars['base_learning_rate'] = 0.01  # Initial learning rate.
+        pars['step_size'] = 100000  # After how many iterations should we decrease the learning rate.
+        pars['learning_momentum'] = 0.9  # Momentum used in learning.
+        pars['weight_decay'] = 0.0005  # Weight decay penalty.
 
         # Network parameters
-        pars['train_batch_size'] = 14
-        pars['test_batch_size'] = 1
+        pars['train_batch_size'] = 14  # Size of the training mini-batch.
+
+        # The number of test samples should equal, test_batch_size * test_iter.
+        # Easiest to set pars['test_iter'] to equal the number of test samples pars['test_batch_size'] = 1
+        pars['test_batch_size'] = 1  # Size of the testing mini-batch.
+        # pars['test_iter'] = 56  # How many test samples we have (we'll set this based on the data)
+
         pars['ntop'] = 2  # How many outputs for the hdf5 data layer (e.g., 'data', 'label' = 2)
 
         pars['dir_snapshots'] = './snapshot'  # Where to store the trained models
