@@ -63,21 +63,22 @@ i.e., in Python, you should be able to run,
 ```python
 import caffe
 ```
+without errors.
 
-without any errors.
-
-To install ann4brains, cd to the ann4brains root folder, and run the install command:
+To install ann4brains, download it, cd to the ann4brains root folder, and then run the install command:
 ```
+git clone https://github.com/jeremykawahara/ann4brains.git
+cd ann4brains
 python setup.py install --user
 ```
 
-Now run the helloworld example,
+You can run the ["hello world"](https://github.com/jeremykawahara/ann4brains/blob/master/examples/helloworld.py) example,
 ```
 cd examples
 python helloworld.py
 ```
 
-This code will create synthetic data, train a small neural network, and you should see an output of:
+which creates synthetic data, trains a small neural network, and should output the correlation of:
 ```
 ('Correlation:', 0.63340843)
 ```
