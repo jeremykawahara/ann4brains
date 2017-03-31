@@ -6,20 +6,17 @@ ann4brains is a Python wrapper for [Caffe](https://github.com/BVLC/caffe) that i
 
 > Kawahara, J., Brown, C. J., Miller, S. P., Booth, B. G., Chau, V., Grunau, R. E., Zwicker, J. G., and Hamarneh, G. (2017). BrainNetCNN: Convolutional neural networks for brain networks; towards predicting neurodevelopment. NeuroImage, 146(July), 1038–1049. [[DOI]](https://doi.org/10.1016/j.neuroimage.2016.09.046) [[URL]](http://brainnetcnn.cs.sfu.ca/) [[PDF]](http://www.cs.sfu.ca/~hamarneh/ecopy/neuroimage2016.pdf)
 
-To run an example program on synthetic data, 
-```
-git clone https://github.com/jeremykawahara/ann4brains.git
-jupyter notebook ann4brains/examples/brainnetcnn.ipynb
-```
+------------------
 
-Here's a fully working, minimal ["hello world" example here](https://github.com/jeremykawahara/ann4brains/blob/master/examples/helloworld.ipynb),
+## Hello World
+
+Here's a fully working, minimal ["hello world" example](https://github.com/jeremykawahara/ann4brains/blob/master/examples/helloworld.py),
 
 ```python
 import os, sys
 import numpy as np
 from scipy.stats.stats import pearsonr
 import caffe
-sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), '..'))) # To import ann4brains
 from ann4brains.synthetic.injury import ConnectomeInjury
 from ann4brains.nets import BrainNetCNN
 np.random.seed(seed=333) # To reproduce results.
@@ -37,16 +34,51 @@ hello_arch = [ # We specify the architecture like this.
     ['relu',    {'negative_slope': 0.33}], # For leaky-ReLU
     ['fc',      {'num_output': 30}],  # Fully connected (n2g) layer with 30 filters.
     ['relu',    {'negative_slope': 0.33}],
-    ['out',     {'num_output': 1}]  # Output layer with num_outs nodes as outputs.
-]
+    ['out',     {'num_output': 1}]]  # Output layer with num_outs nodes as outputs.
 
 hello_net = BrainNetCNN('hello_world', hello_arch) # Create BrainNetCNN model
 hello_net.fit(x_train, y_train[:,0], x_valid, y_valid[:,0]) # Train (regress only on class 0)
 preds = hello_net.predict(x_test) # Predict labels of test data
-
 print("Correlation:", pearsonr(preds, y_test[:,0])[0])
 ```
 
 More examples can be found in this [extended notebook](https://github.com/jeremykawahara/ann4brains/blob/master/examples/brainnetcnn.ipynb).
 
 If you prefer to work directly with [Caffe](https://github.com/BVLC/caffe) and not use this wrapper, you can modify the [example prototxt files](https://github.com/jeremykawahara/ann4brains/tree/master/examples/proto) that implement the E2E and E2N filters.
+
+------------------
+
+## Installation
+
+ann4brains uses the following dependencies:
+
+- numpy
+- scipy
+- h5py
+- [Caffe](https://github.com/BVLC/caffe)
+
+*You must already have [Caffe](https://github.com/BVLC/caffe) and pycaffe working on your system*
+
+i.e., in Python, you should be able to run,
+```python
+import caffe
+```
+
+without any errors.
+
+To install ann4brains, cd to the ann4brains root folder, and run the install command:
+```
+python setup.py install --user
+```
+
+Now run the helloworld example,
+```
+cd examples
+python helloworld.py
+```
+
+This code will create synthetic data, train a small neural network, and you should see an output of:
+```
+('Correlation:', 0.63340843)
+```
+

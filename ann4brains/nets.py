@@ -7,15 +7,15 @@ from caffe import layers as L
 from layers import e2e_conv, e2n_conv, full_connect
 from optimizers import caffe_SGD
 from utils import h5_utils
-import abc
-import six
+# import abc
+# import six
 from scipy.stats.stats import pearsonr
 from utils.h5_utils import caffe_write_h5
 
 
-# ABC for python 2 and 3
+# ABC for python 2 and 3. Now removed to make dependencies easier.
 # http://stackoverflow.com/a/35673504/754920
-@six.add_metaclass(abc.ABCMeta)
+# @six.add_metaclass(abc.ABCMeta)
 class BaseNet(object):
 
     def __init__(self, net_name, arch, hdf5_train=None, hdf5_validate=None,
@@ -53,9 +53,10 @@ class BaseNet(object):
         # Easiest to set pars['test_iter'] to equal the number of test samples pars['test_batch_size'] = 1
         self.pars['test_iter'] = data_dims[0]
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def create_architecture(self, mode, hdf5_data):
-        """Return the architecture for the net. Implement in the inherited class."""
+        """Return the architecture for the net."""
+        # Implement in the inherited class.
         n = []
         return n
 
@@ -145,16 +146,19 @@ class BaseNet(object):
                                            self.net_name + '_iter_' + str(iter_num) + '.caffemodel')
         self.net = caffe.Net(self.deploy_proto, snapshot_caffemodel, caffe.TEST)
 
-    @abc.abstractmethod
+    # @abc.abstractmethod
     def predict(self, X):
         """Computes the predictions for X using the trained model."""
+        # Implement in the inherited class.
         preds = []
         return preds
 
+
+    # @abc.abstractmethod
     @staticmethod
-    @abc.abstractmethod
     def print_results(X, Y):
         """Displays the results"""
+        # Implement in the inherited class.
         pass
 
     def caffe_get_layer_response(self, net, preprocessed_x, response_layer_id='out', input_layer_id='data'):
