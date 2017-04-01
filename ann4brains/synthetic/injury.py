@@ -2,31 +2,32 @@ import os
 import scipy.io
 import numpy as np
 
+
 class ConnectomeInjury(object):
 
     def __init__(self,
-                 base_filename=os.path.join('data', 'preterm_structural_base.mat'),  # Base connectome filename.
+                 base_filename=os.path.join('data', 'base.mat'),  # Base connectome filename.
                  n_injuries=2,  # How many injuries to have (currently only works for 2).
                  signature_seed=333,  # Random seed for the injury signature.
                  ):
+        """Use to create synthetic injury data."""
 
         # Set the mean base connectome.
         self.X_mn = self.load_base_connectome(base_filename)
 
         # Generate the injury signatures (set the random seed so get same signatures).
         r_state = np.random.RandomState(signature_seed)
-        self.injury_sigs = self.generate_injury_signatures(self.X_mn, n_injuries, r_state)
+        self.sigs = self.generate_injury_signatures(self.X_mn, n_injuries, r_state)
 
     def generate_injury(self, n_samples=100,  # How many samples to create.
                         noise_weight=0.125,  # How much to weigh the noise.
                         ):
-        """Return synthetic injury data and corresponding injury strength."""
-
+        """Return n_samples of synthetic injury data and corresponding injury strength."""
 
         # Generate phantoms with injuries of different strengths (and add noise)
         # TODO: allow for N injury patterns
-        X, Y = self.sample_injury_strengths(n_samples, self.X_mn, self.injury_sigs[0],
-                                            self.injury_sigs[1], noise_weight)
+        X, Y = self.sample_injury_strengths(n_samples, self.X_mn, self.sigs[0],
+                                            self.sigs[1], noise_weight)
 
         # Make sure the number of samples matches what was specified.
         assert X.shape[0] == n_samples

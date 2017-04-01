@@ -11,6 +11,7 @@ from utils import h5_utils
 # import six
 from scipy.stats.stats import pearsonr
 from utils.h5_utils import caffe_write_h5
+from utils.metrics import regression_metrics
 
 
 # ABC for python 2 and 3. Now removed to make dependencies easier.
@@ -18,7 +19,10 @@ from utils.h5_utils import caffe_write_h5
 # @six.add_metaclass(abc.ABCMeta)
 class BaseNet(object):
 
-    def __init__(self, net_name, arch, hdf5_train=None, hdf5_validate=None,
+    def __init__(self, net_name,
+                 arch,  # Neural network architecture.
+                 hdf5_train=None, hdf5_validate=None,
+                 hardware='gpu',  # Either 'gpu' or 'cpu'
                  dir_data='./generated_synthetic_data',  # Where to store the data.
                  ):
         """Initialize the neural network.
@@ -31,6 +35,7 @@ class BaseNet(object):
         # Dictionary stores all the parameters for the optimization.
         self.pars = self.get_default_hyper_params(self.net_name)
         self.arch = arch
+        self.hardware = hardware
         self.dir_data = dir_data
 
         if hdf5_train is not None:
@@ -53,11 +58,57 @@ class BaseNet(object):
         # Easiest to set pars['test_iter'] to equal the number of test samples pars['test_batch_size'] = 1
         self.pars['test_iter'] = data_dims[0]
 
-    # @abc.abstractmethod
     def create_architecture(self, mode, hdf5_data):
-        """Return the architecture for the net."""
-        # Implement in the inherited class.
-        n = []
+        """Returns the architecture (i.e., caffe prototxt) of the model.
+
+        Jer: One day this should probably be written to be more general.
+        """
+
+        arch = self.arch
+        pars = self.pars
+        n = caffe.NetSpec()
+
+        if mode == 'deploy':
+            n.data = L.DummyData(shape=[dict(dim=pars['deploy_dims'])])
+        elif mode == 'train':
+            n.data, n.label = L.HDF5Data(batch_size=pars['train_batch_size'], source=hdf5_data, ntop=pars['ntop'])
+        else:  # Test.
+            n.data, n.label = L.HDF5Data(batch_size=pars['test_batch_size'], source=hdf5_data, ntop=pars['ntop'])
+
+        # print(n.to_proto())
+        in_layer = n.data
+
+        for layer in arch:
+            layer_type, vals = layer
+
+            if layer_type == 'e2e':
+                in_layer = n.e2e = e2e_conv(in_layer, vals['n_output'], vals['kernel_h'], vals['kernel_w'])
+            elif layer_type == 'e2n':
+                in_layer = n.e2n = e2n_conv(in_layer, vals['n_output'], vals['kernel_h'], vals['kernel_w'])
+            elif layer_type == 'fc':
+                in_layer = n.fc = full_connect(in_layer, vals['n_output'])
+            elif layer_type == 'out':
+                n.out = full_connect(in_layer, vals['n_output'])
+                # Rename to user specified unique layer name.
+                # n.__setattr__('out', n.new_layer)
+
+            elif layer_type == 'dropout':
+                in_layer = n.dropout = L.Dropout(in_layer, in_place=True,
+                                                 dropout_param=dict(dropout_ratio=vals['dropout_ratio']))
+            elif layer_type == 'relu':
+                in_layer = n.relu = L.ReLU(in_layer, in_place=True,
+                                           relu_param=dict(negative_slope=vals['negative_slope']))
+            else:
+                raise ValueError('Unknown layer type: ' + str(layer_type))
+
+        # ~ end for.
+
+        if mode != 'deploy':
+            if self.pars['loss'] == 'EuclideanLoss':
+                n.loss = L.EuclideanLoss(n.out, n.label)
+            else:
+                ValueError("Only 'EuclideanLoss' currently implemented for pars['loss']!")
+
         return n
 
     def create_prototxts(self, hdf5_train, hdf5_validation):  # TODO: Make protected
@@ -117,12 +168,10 @@ class BaseNet(object):
             self.create_prototxts(self.hdf5_train + '.txt', self.hdf5_validate + '.txt')
 
             # Optimize the net.
-            self.train_metrics, self.test_metrics, self.preds, self.actuals = caffe_SGD(self.solver_proto,
-                                                                                        self.pars['max_iter'],
-                                                                                        self.pars['test_interval'],
-                                                                                        self.pars['test_iter'],
-                                                                                        start_weights_name=None,
-                                                                                        set_mode=self.pars['hardware'])
+            self.train_metrics, self.test_metrics = caffe_SGD(self.solver_proto, self.pars['max_iter'],
+                                                               self.pars['test_interval'], self.pars['test_iter'],
+                                                               regression_metrics,
+                                                               start_weights_name=None, set_mode=self.hardware)
 
             # Then load the parameters from the last iteration.
             self.load_net(self.pars['max_iter'])
@@ -203,7 +252,6 @@ class BaseNet(object):
         pars = {}
         pars['net_name'] = net_name  # A unique name of the model.
         pars['dl_framework'] = 'caffe'  # To use different backend neural network frameworks (only caffe for now).
-        pars['hardware'] = 'gpu'  # Either 'gpu' or 'cpu'
 
         # Solver parameters
         pars['test_interval'] = 100  # Check the model over the test/validation data after this many iterations.
@@ -213,6 +261,8 @@ class BaseNet(object):
         pars['step_size'] = 100000  # After how many iterations should we decrease the learning rate.
         pars['learning_momentum'] = 0.9  # Momentum used in learning.
         pars['weight_decay'] = 0.0005  # Weight decay penalty.
+
+        pars['loss'] = 'EuclideanLoss'
 
         # Network parameters
         pars['train_batch_size'] = 14  # Size of the training mini-batch.
@@ -231,57 +281,8 @@ class BaseNet(object):
 
 
 class BrainNetCNN(BaseNet):
-    def create_architecture(self, mode, hdf5_data):
-        """Returns the architecture (i.e., caffe prototxt) of the model.
 
-        Jer: One day this should probably be written to be more general and go into the BaseNet.
-        """
-
-        arch = self.arch
-        pars = self.pars
-        n = caffe.NetSpec()
-
-        if mode == 'deploy':
-            n.data = L.DummyData(shape=[dict(dim=pars['deploy_dims'])])
-        elif mode == 'train':
-            n.data, n.label = L.HDF5Data(batch_size=pars['train_batch_size'], source=hdf5_data, ntop=pars['ntop'])
-        else:  # Test.
-            n.data, n.label = L.HDF5Data(batch_size=pars['test_batch_size'], source=hdf5_data, ntop=pars['ntop'])
-
-        # print(n.to_proto())
-        in_layer = n.data
-
-        for layer in arch:
-            layer_type, vals = layer
-
-            if layer_type == 'e2e':
-                in_layer = n.e2e = e2e_conv(in_layer, vals['num_output'], vals['kernel_h'], vals['kernel_w'])
-            elif layer_type == 'e2n':
-                in_layer = n.e2n = e2n_conv(in_layer, vals['num_output'], vals['kernel_h'], vals['kernel_w'])
-            elif layer_type == 'fc':
-                in_layer = n.fc = full_connect(in_layer, vals['num_output'])
-            elif layer_type == 'out':
-                n.out = full_connect(in_layer, vals['num_output'])
-                # Rename to user specified unique layer name.
-                # n.__setattr__('out', n.new_layer)
-
-            elif layer_type == 'dropout':
-                in_layer = n.dropout = L.Dropout(in_layer, in_place=True,
-                                                 dropout_param=dict(dropout_ratio=vals['dropout_ratio']))
-            elif layer_type == 'relu':
-                in_layer = n.relu = L.ReLU(in_layer, in_place=True,
-                                           relu_param=dict(negative_slope=vals['negative_slope']))
-            else:
-                raise ValueError('Unknown layer type: ' + str(layer_type))
-
-        # ~ end for.
-
-        if mode != 'deploy':
-            n.loss = L.EuclideanLoss(n.out, n.label)
-
-        return n
-
-    def get_mat_preds(self, net, X, input_layer_id='data', response_layer_id='out'):
+    def _get_mat_preds(self, net, X, input_layer_id='data', response_layer_id='out'):
         if self.pars['dl_framework'] == 'caffe':
             preds = []
             for x in X:
@@ -299,27 +300,27 @@ class BrainNetCNN(BaseNet):
                 the number of channels in each sample, and, H and W are the spatial dimensions
                 for each sample.
         """
-        preds = self.get_mat_preds(self.net, X, input_layer_id='data', response_layer_id='out')
+        preds = self._get_mat_preds(self.net, X, input_layer_id='data', response_layer_id='out')
         return preds
 
     @staticmethod
-    def compute_prediction_metrics(pred_values, actual_values):
+    def regression_metrics(pred_values, actual_values):
         """Returns the metrics for predicted and true values. Assumes a 1D prediction."""
 
-        madErr = np.mean(abs(pred_values - actual_values))
+        mad = np.mean(abs(pred_values - actual_values))
         std_mad = np.std(abs(pred_values - actual_values))
         c, p = pearsonr(pred_values, actual_values)
 
-        return madErr, std_mad, c, p
+        return mad, std_mad, c, p
 
     @staticmethod
     def print_results(X, Y):
         class_idx = 0
-        cog_madErr, cog_mad_std, cog_c, cog_p = BrainNetCNN.compute_prediction_metrics(X[:, class_idx], Y[:, class_idx])
+        cog_madErr, cog_mad_std, cog_c, cog_p = BrainNetCNN.regression_metrics(X[:, class_idx], Y[:, class_idx])
         print('%s => mae: %.4f, corr: %.4f, p-val: %.4f' % ('rho', cog_madErr, cog_c, cog_p))
 
         class_idx = 1
-        mot_madErr, mot_mad_std, mot_c, mot_p = BrainNetCNN.compute_prediction_metrics(X[:, class_idx], Y[:, class_idx])
+        mot_madErr, mot_mad_std, mot_c, mot_p = BrainNetCNN.regression_metrics(X[:, class_idx], Y[:, class_idx])
         print('%s => mae: %.4f, corr: %.4f, p-val: %.4f' % ('rho', mot_madErr, mot_c, mot_p))
 
         # print '& %.3f & %.4f & %.3f & %.3f & %.3f & %.4f & %.3f & %.3f \\\\' % (mot_c, mot_p, mot_madErr*100, mot_mad_std*100, cog_c, cog_p, cog_madErr*100, cog_mad_std*100)
