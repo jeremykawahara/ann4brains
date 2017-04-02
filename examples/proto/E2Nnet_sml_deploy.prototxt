@@ -25,7 +25,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 16
+    num_output: 130
     stride: 1
     weight_filler {
       type: "xavier"

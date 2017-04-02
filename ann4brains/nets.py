@@ -1,6 +1,7 @@
 from __future__ import print_function
 import numpy as np
 import os
+import matplotlib.pyplot as plt
 import caffe
 from caffe.proto import caffe_pb2
 from caffe import layers as L
@@ -162,16 +163,16 @@ class BaseNet(object):
                 self.hdf5_validate = os.path.abspath(os.path.join(self.dir_data, 'valid.h5'))
                 caffe_write_h5(self.hdf5_train, x_train, y_train)
                 caffe_write_h5(self.hdf5_validate, x_valid, y_valid)
-                self.set_data_dependent_pars(x_train)
+                self.set_data_dependent_pars(x_valid)
 
             # Create the prototxt files
             self.create_prototxts(self.hdf5_train + '.txt', self.hdf5_validate + '.txt')
 
             # Optimize the net.
             self.train_metrics, self.test_metrics = caffe_SGD(self.solver_proto, self.pars['max_iter'],
-                                                               self.pars['test_interval'], self.pars['test_iter'],
-                                                               regression_metrics,
-                                                               start_weights_name=None, set_mode=self.hardware)
+                                                              self.pars['test_interval'], self.pars['test_iter'],
+                                                              compute_metrics_func=self.pars['compute_metrics_func'],
+                                                              start_weights_name=None, set_mode=self.hardware)
 
             # Then load the parameters from the last iteration.
             self.load_net(self.pars['max_iter'])
@@ -210,6 +211,12 @@ class BaseNet(object):
         # Implement in the inherited class.
         pass
 
+    # @abc.abstractmethod
+    def plot_iter_metrics(self):
+        """Plot the train, test metrics over iterations."""
+        # Implement in the inherited class.
+        pass
+
     def caffe_get_layer_response(self, net, preprocessed_x, response_layer_id='out', input_layer_id='data'):
         """Returns the responses at a specified layer for the given input."""
 
@@ -236,6 +243,7 @@ class BaseNet(object):
         s.gamma = 0.1  # CJB: whats this? Should we create a hyper parameter for it?
         s.stepsize = self.pars['step_size']
         s.max_iter = self.pars['max_iter']
+        s.display = self.pars['train_interval']
         s.momentum = self.pars['learning_momentum']
         s.weight_decay = self.pars['weight_decay']
         s.snapshot = self.pars['snapshot']
@@ -244,6 +252,17 @@ class BaseNet(object):
         s.random_seed = 333
 
         return s
+
+    def _get_mat_preds(self, net, X, input_layer_id='data', response_layer_id='out'):
+        if self.pars['dl_framework'] == 'caffe':
+            preds = []
+            for x in X:
+                p = self.caffe_get_layer_response(net, x, response_layer_id, input_layer_id)
+                preds.append(np.squeeze(p))
+        else:
+            print('No valid deep learning framework specified in hyper parameter \'dl_framework\'')
+
+        return np.asarray(preds)
 
     @staticmethod
     def get_default_hyper_params(net_name):
@@ -254,6 +273,7 @@ class BaseNet(object):
         pars['dl_framework'] = 'caffe'  # To use different backend neural network frameworks (only caffe for now).
 
         # Solver parameters
+        pars['train_interval'] = 100  # Display the loss over the training data after 100 iterations.
         pars['test_interval'] = 100  # Check the model over the test/validation data after this many iterations.
         pars['max_iter'] = 2000  # Max number of iterations to train the model for.
         pars['snapshot'] = 1000  # After how many iterations should we save the model.
@@ -262,7 +282,8 @@ class BaseNet(object):
         pars['learning_momentum'] = 0.9  # Momentum used in learning.
         pars['weight_decay'] = 0.0005  # Weight decay penalty.
 
-        pars['loss'] = 'EuclideanLoss'
+        pars['loss'] = 'EuclideanLoss'  # The loss to use (currently only EuclideanLoss works)
+        pars['compute_metrics_func'] = regression_metrics  # Can override with your own as long as follows format.
 
         # Network parameters
         pars['train_batch_size'] = 14  # Size of the training mini-batch.
@@ -282,17 +303,6 @@ class BaseNet(object):
 
 class BrainNetCNN(BaseNet):
 
-    def _get_mat_preds(self, net, X, input_layer_id='data', response_layer_id='out'):
-        if self.pars['dl_framework'] == 'caffe':
-            preds = []
-            for x in X:
-                p = self.caffe_get_layer_response(net, x, response_layer_id, input_layer_id)
-                preds.append(np.squeeze(p))
-        else:
-            print('No valid deep learning framework specified in hyper parameter \'dl_framework\'')
-
-        return np.asarray(preds)
-
     def predict(self, X):
         """Computes the predictions for X.
 
@@ -304,25 +314,60 @@ class BrainNetCNN(BaseNet):
         return preds
 
     @staticmethod
-    def regression_metrics(pred_values, actual_values):
-        """Returns the metrics for predicted and true values. Assumes a 1D prediction."""
+    def print_results(preds, y_test):
+        """Print the results for this experiment.
 
-        mad = np.mean(abs(pred_values - actual_values))
-        std_mad = np.std(abs(pred_values - actual_values))
-        c, p = pearsonr(pred_values, actual_values)
+        This assumes two classes. And that utils.metrics.regression_metrics computes the desired metrics.
+        You might have to override this if your problem is different.
 
-        return mad, std_mad, c, p
+        :param preds: the predicted values.
+        :param y_test: the true labels.
+        """
 
-    @staticmethod
-    def print_results(X, Y):
-        class_idx = 0
-        cog_madErr, cog_mad_std, cog_c, cog_p = BrainNetCNN.regression_metrics(X[:, class_idx], Y[:, class_idx])
-        print('%s => mae: %.4f, corr: %.4f, p-val: %.4f' % ('rho', cog_madErr, cog_c, cog_p))
+        print('E2E prediction results')
+        test_metrics_0 = regression_metrics(preds[:, 0], y_test[:, 0])
+        print('%s => mae: %.3f, SDAE: %0.3f, corr: %.3f, p-val: %.3f' % ('class 0',
+                                                                         test_metrics_0['mad'],
+                                                                         test_metrics_0['std_mad'],
+                                                                         test_metrics_0['corr_0'],
+                                                                         test_metrics_0['p_0']))
 
-        class_idx = 1
-        mot_madErr, mot_mad_std, mot_c, mot_p = BrainNetCNN.regression_metrics(X[:, class_idx], Y[:, class_idx])
-        print('%s => mae: %.4f, corr: %.4f, p-val: %.4f' % ('rho', mot_madErr, mot_c, mot_p))
+        test_metrics_1 = regression_metrics(preds[:, 1], y_test[:, 1])
+        print('%s => mae: %.3f, SDAE: %0.3f, corr: %.3f, p-val: %.3f' % ('class 1',
+                                                                         test_metrics_1['mad'],
+                                                                         test_metrics_1['std_mad'],
+                                                                         test_metrics_1['corr_0'],
+                                                                         test_metrics_1['p_0']))
 
-        # print '& %.3f & %.4f & %.3f & %.3f & %.3f & %.4f & %.3f & %.3f \\\\' % (mot_c, mot_p, mot_madErr*100, mot_mad_std*100, cog_c, cog_p, cog_madErr*100, cog_mad_std*100)
+    def plot_iter_metrics(self):
+        """Plot the train, test metrics over iterations.
 
-        print(mot_c + cog_c)
+        This assumes two classes. And that utils.metrics.regression_metrics was used to monitor the performance.
+        You might have to override this if your problem is different.
+        """
+
+        itr = []
+        # met_keys = test_metrics[0][1].keys()
+        # mets = [[]]*len(met_keys)
+        mad = []
+        corr_0 = []
+        corr_1 = []
+
+        for met in self.test_metrics:
+            itr.append(met[0])
+            # for m_key in met_keys:
+            #    mets[0].append(met[1][m_key])
+            mad.append(met[1]['mad'])
+            corr_0.append(met[1]['corr_0'])
+            corr_1.append(met[1]['corr_1'])
+
+        fig, ax = plt.subplots()
+        axes = [ax, ax.twinx()]
+        axes[0].plot(self.train_metrics, color='purple', label='train loss')
+        axes[0].plot(itr, mad, color='red', label='valid mad')
+        axes[1].plot(itr, corr_0, color='blue', label='valid corr_0')
+        axes[1].plot(itr, corr_1, color='green', label='valid corr_1')
+
+        lines, labels = axes[0].get_legend_handles_labels()
+        lines2, labels2 = axes[1].get_legend_handles_labels()
+        axes[1].legend(lines + lines2, labels + labels2, loc='best')

@@ -22,7 +22,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 130
+    num_output: 16
     stride: 1
     weight_filler {
       type: "xavier"
@@ -100,7 +100,7 @@ layer {
     decay_mult: 0
   }
   inner_product_param {
-    num_output: 2
+    num_output: 1
     weight_filler {
       type: "xavier"
     }

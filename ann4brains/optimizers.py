@@ -3,7 +3,7 @@ import numpy as np
 
 
 def caffe_SGD(solver_filename, niter, test_interval, test_iter,
-              compute_metrics_fun,
+              compute_metrics_func,
               start_weights_name=None, set_mode='gpu',
               pred_layer_id='out'):
     """
@@ -64,7 +64,7 @@ def caffe_SGD(solver_filename, niter, test_interval, test_iter,
                 preds = np.vstack([preds, pred]) if preds.size else pred
                 actuals = np.vstack([actuals, actual]) if actuals.size else actual
 
-            out = compute_metrics_fun(preds, actuals)  # Compute our own metric.
+            out = compute_metrics_func(preds, actuals)  # Compute our own metric.
             # test_acc[it // test_interval, :] = out
             test_metrics.append([it, out])
 

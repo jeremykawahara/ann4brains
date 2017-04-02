@@ -4,8 +4,8 @@ layer {
   top: "data"
   top: "label"
   hdf5_data_param {
-    source: "/cs/ghassan2/students_less/jkawahar/projects/kawgit/ann4brains/examples/generated_synthetic_data/train.h5.txt"
-    batch_size: 14
+    source: "/cs/ghassan2/students_less/jkawahar/projects/kawgit/ann4brains/examples/generated_synthetic_data/valid.h5.txt"
+    batch_size: 1
   }
 }
 layer {
@@ -22,7 +22,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 130
+    num_output: 16
     stride: 1
     weight_filler {
       type: "xavier"
@@ -100,7 +100,7 @@ layer {
     decay_mult: 0
   }
   inner_product_param {
-    num_output: 2
+    num_output: 1
     weight_filler {
       type: "xavier"
     }

@@ -4,7 +4,7 @@ layer {
   top: "data"
   top: "label"
   hdf5_data_param {
-    source: "/home/jer/projects/jk_git/ann4brains/examples/generated_synthetic_data/validate-100_noise-0.125.h5.txt"
+    source: "/cs/ghassan2/students_less/jkawahar/projects/kawgit/ann4brains/examples/generated_synthetic_data/valid.h5.txt"
     batch_size: 1
   }
 }
@@ -22,7 +22,7 @@ layer {
     decay_mult: 0
   }
   convolution_param {
-    num_output: 16
+    num_output: 130
     stride: 1
     weight_filler {
       type: "xavier"
