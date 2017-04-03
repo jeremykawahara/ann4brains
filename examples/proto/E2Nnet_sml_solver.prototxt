@@ -1,8 +1,9 @@
 train_net: "./proto/E2Nnet_sml_train.prototxt"
 test_net: "./proto/E2Nnet_sml_test.prototxt"
-test_iter: 112
+test_iter: 56
 test_interval: 500
 base_lr: 0.01
+display: 100
 max_iter: 100000
 lr_policy: "step"
 gamma: 0.1
