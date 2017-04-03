@@ -4,7 +4,7 @@ layer {
   top: "data"
   top: "label"
   hdf5_data_param {
-    source: "/cs/ghassan2/students_less/jkawahar/projects/kawgit/ann4brains/examples/generated_synthetic_data/valid.h5.txt"
+    source: "/local-scratch/jer/projects/ann4brains/examples/generated_synthetic_data/valid.h5.txt"
     batch_size: 1
   }
 }

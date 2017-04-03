@@ -17,6 +17,7 @@ import os, sys
 import numpy as np
 from scipy.stats.stats import pearsonr
 import caffe
+sys.path.insert(0, os.path.abspath(os.path.join(os.getcwd(), '..'))) # To import ann4brains.
 from ann4brains.synthetic.injury import ConnectomeInjury
 from ann4brains.nets import BrainNetCNN
 np.random.seed(seed=333) # To reproduce results.
@@ -67,21 +68,20 @@ import caffe
 ```
 without errors.
 
-To install ann4brains, download it, cd to the ann4brains root folder, and then run the install command:
+[comment]: # (To install ann4brains, download it, cd to the ann4brains root folder, and then run the install command:)
+
+To use ann4brains, download it, and try to run the [helloworld](https://github.com/jeremykawahara/ann4brains/blob/master/examples/helloworld.py) example:
+
 ```
 git clone https://github.com/jeremykawahara/ann4brains.git
-cd ann4brains
-python setup.py install --user
-```
-
-You can run the ["hello world"](https://github.com/jeremykawahara/ann4brains/blob/master/examples/helloworld.py) example,
-```
-cd examples
+cd ann4brains/examples
 python helloworld.py
 ```
 
-which creates synthetic data, trains a small neural network, and should output the correlation of:
+This example will create synthetic data, train a small neural network, and should output the correlation of:
 ```
 ('Correlation:', 0.63340843)
 ```
+
+[comment]: # (python setup.py install --user)
 
