@@ -55,6 +55,8 @@ ann4brains uses the following dependencies:
 - numpy
 - scipy
 - h5py
+- matplotlib
+- cPickle
 - [Caffe](https://github.com/BVLC/caffe)
 
 *You must already have [Caffe](https://github.com/BVLC/caffe) and pycaffe working on your system*

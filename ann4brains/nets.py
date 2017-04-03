@@ -2,6 +2,7 @@ from __future__ import print_function
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+import cPickle
 import caffe
 from caffe.proto import caffe_pb2
 from caffe import layers as L
@@ -10,9 +11,23 @@ from optimizers import caffe_SGD
 from utils import h5_utils
 # import abc
 # import six
-from scipy.stats.stats import pearsonr
 from utils.h5_utils import caffe_write_h5
 from utils.metrics import regression_metrics
+
+
+def load_model(filepath):
+    """Load the model.
+
+    :param filepath: Filename and path to load the model:
+    :return: a BrainnetCNN/BaseNet object
+    """
+
+    with open(filepath, 'rb') as fid:
+        model = cPickle.load(fid)
+
+    model.load_parameters()
+
+    return model
 
 
 # ABC for python 2 and 3. Now removed to make dependencies easier.
@@ -39,12 +54,24 @@ class BaseNet(object):
         self.hardware = hardware
         self.dir_data = dir_data
 
+        # Iteration number to load the weights (set to None since no weights now).
+        self.parameter_iter = None
+
         if hdf5_train is not None:
             self.hdf5_train = hdf5_train
             self.hdf5_validate = hdf5_validate
             # Load the data to infer some of the parameters (otherwise you'll have to set them in self.pars)
             data = h5_utils.read_h5(self.hdf5_validate, ['data', 'label'])
             self.set_data_dependent_pars(data['data'])
+
+    def __getstate__(self):
+
+        # Some things cannot (or we do not want them to) be pickled.
+        # This is a way of specifying what we can pickle.
+        # http://stackoverflow.com/questions/2999638/how-to-stop-attributes-from-being-pickled-in-python?noredirect=1&lq=1
+        d = dict(self.__dict__)
+        del d['net']
+        return d
 
     def set_data_dependent_pars(self, data):
         """Set parameters that are dependent on the data."""
@@ -175,7 +202,8 @@ class BaseNet(object):
                                                               start_weights_name=None, set_mode=self.hardware)
 
             # Then load the parameters from the last iteration.
-            self.load_net(self.pars['max_iter'])
+            self.parameter_iter = self.pars['max_iter']
+            self.load_parameters()
         else:
             print('No valid deep learning framework specified in hyper parameter \'dl_framework\'')
 
@@ -185,16 +213,28 @@ class BaseNet(object):
     #    plot_err_iter(ax1, self.pars['net_name'], self.train_metrics[np.newaxis, :], self.test_metrics[np.newaxis, :],
     #                  self.pars['max_iter'], self.pars['test_interval'])
 
-    def load_net(self, iter_num=None):
+    def load_parameters(self, iter_num=None):
+        """Load the trained weights/parameters at iteration iter_num.
+
+        :param iter_num: the iteration at which to load the weights.
+        """
         # Report results on the last trained model.
 
         if iter_num is None:
-            # Load the parameters for the last trained model.
-            iter_num = self.pars['max_iter']
+            # Load the parameters  trained model.
+            iter_num = self.parameter_iter
 
         snapshot_caffemodel = os.path.join(self.pars['dir_snapshots'],
                                            self.net_name + '_iter_' + str(iter_num) + '.caffemodel')
         self.net = caffe.Net(self.deploy_proto, snapshot_caffemodel, caffe.TEST)
+
+    def save(self, filepath):
+        """Save the object (model, weights).
+
+        :param filepath: name and path of where to save the model.
+        """
+        with open(filepath, 'wb') as fid:
+            cPickle.dump(self, fid)
 
     # @abc.abstractmethod
     def predict(self, X):
