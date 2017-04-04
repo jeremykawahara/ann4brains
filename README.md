@@ -1,8 +1,8 @@
 # ann4brains
 
-ann4brains implements filters for adjacency matrices that can be used within a deep neural network. These filters are designed specifically for brain network connectomes, but could be used with any adjacency matrix. 
+ann4brains implements filters for adjacency matrices representing networks that can be used within a deep neural network. These filters are designed specifically for brain networks (i.e. connectomes), but can be used with adjacency matrices representing networks of any kind. 
 
-If your dataset is raw connectivity data (e.g., diffusion or functional MRI volumes), you will need to first extract brain networks (i.e., 2D adjacency matrix) from this data using other software (e.g., the Connectome Computation System, https://github.com/zuoxinian/CCS or the HCP Connectome Toolbox, http://www.humanconnectome.org/software/)
+If your dataset is raw connectivity data (e.g., diffusion or functional MRI volumes), you will need to first extract brain networks (i.e., 2D adjacency matrices) from this data using other software (e.g., the Connectome Computation System, https://github.com/zuoxinian/CCS or the HCP Connectome Toolbox, http://www.humanconnectome.org/software/)
 
 ann4brains is a Python wrapper for [Caffe](https://github.com/BVLC/caffe) that implements the Edge-to-Edge, and Edge-to-Node filters as described in:
 
