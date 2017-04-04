@@ -28,14 +28,14 @@ x_test, y_test = injury.generate_injury()
 x_valid, y_valid = injury.generate_injury()
 
 hello_arch = [ # We specify the architecture like this.
-    ['e2n', {'n_output': 16,  # e2n layer with 16 filters.
+    ['e2n', {'n_filters': 16,  # e2n layer with 16 filters.
              'kernel_h': x_train.shape[2], 
              'kernel_w': x_train.shape[3]}], # Same dimensions as spatial inputs.
     ['dropout', {'dropout_ratio': 0.5}], # Dropout at 0.5
     ['relu',    {'negative_slope': 0.33}], # For leaky-ReLU
-    ['fc',      {'n_output': 30}],  # Fully connected (n2g) layer with 30 filters.
+    ['fc',      {'n_filters': 30}],  # Fully connected (n2g) layer with 30 filters.
     ['relu',    {'negative_slope': 0.33}],
-    ['out',     {'n_output': 1}]]  # Output layer with num_outs nodes as outputs.
+    ['out',     {'n_filters': 1}]]  # Output layer with 1 nodes as output.
 
 hello_net = BrainNetCNN('hello_world', hello_arch) # Create BrainNetCNN model
 hello_net.fit(x_train, y_train[:,0], x_valid, y_valid[:,0]) # Train (regress only on class 0)

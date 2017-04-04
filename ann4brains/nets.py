@@ -110,13 +110,13 @@ class BaseNet(object):
             layer_type, vals = layer
 
             if layer_type == 'e2e':
-                in_layer = n.e2e = e2e_conv(in_layer, vals['n_output'], vals['kernel_h'], vals['kernel_w'])
+                in_layer = n.e2e = e2e_conv(in_layer, vals['n_filters'], vals['kernel_h'], vals['kernel_w'])
             elif layer_type == 'e2n':
-                in_layer = n.e2n = e2n_conv(in_layer, vals['n_output'], vals['kernel_h'], vals['kernel_w'])
+                in_layer = n.e2n = e2n_conv(in_layer, vals['n_filters'], vals['kernel_h'], vals['kernel_w'])
             elif layer_type == 'fc':
-                in_layer = n.fc = full_connect(in_layer, vals['n_output'])
+                in_layer = n.fc = full_connect(in_layer, vals['n_filters'])
             elif layer_type == 'out':
-                n.out = full_connect(in_layer, vals['n_output'])
+                n.out = full_connect(in_layer, vals['n_filters'])
                 # Rename to user specified unique layer name.
                 # n.__setattr__('out', n.new_layer)
 
