@@ -45,8 +45,6 @@ print("Correlation:", pearsonr(preds, y_test[:,0])[0])
 
 More examples can be found in this [extended notebook](https://github.com/jeremykawahara/ann4brains/blob/master/examples/brainnetcnn.ipynb).
 
-If you prefer to work directly with [Caffe](https://github.com/BVLC/caffe) and not use this wrapper, you can modify the [example prototxt files](https://github.com/jeremykawahara/ann4brains/tree/master/examples/proto) that implement the E2E and E2N filters.
-
 ------------------
 
 ## Installation
@@ -83,5 +81,12 @@ This example will create synthetic data, train a small neural network, and shoul
 ('Correlation:', 0.63340843)
 ```
 
+More examples are in this [extended notebook](https://github.com/jeremykawahara/ann4brains/blob/master/examples/brainnetcnn.ipynb).
+
 [comment]: # (python setup.py install --user)
 
+------------------
+
+## Working directly with Caffe
+
+If you prefer to work directly with [Caffe](https://github.com/BVLC/caffe) and not use this wrapper, you can modify the [example prototxt files](https://github.com/jeremykawahara/ann4brains/tree/master/examples/proto) that implement the E2E and E2N filters. Or view the [Python files](https://github.com/jeremykawahara/ann4brains/blob/master/ann4brains/layers.py) that generate the E2E and E2N layers.
