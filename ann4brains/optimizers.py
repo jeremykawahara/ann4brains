@@ -18,7 +18,7 @@ def caffe_SGD(solver_filename, niter, test_interval, test_iter,
     """
 
     # Load a new solver each time.
-    solver = caffe.SGDSolver(solver_filename)
+    solver = caffe.get_solver(solver_filename)
 
     # num_metrics = solver.net.blobs[pred_layer_id].data.shape[1] + 1
 
@@ -30,9 +30,14 @@ def caffe_SGD(solver_filename, niter, test_interval, test_iter,
     if set_mode == 'cpu':
         caffe.set_mode_cpu()
     elif set_mode == 'gpu':
-        # print "CANCELED GPU!!!"
-        caffe.set_mode_gpu()
+        # For some reason, calling caffe.set_mode_gpu() gives the error:
+        #
+        # Check failed: error == cudaSuccess (33 vs. 0)  invalid resource handle 
+        #
+        # So best to ignore the GPU flag here.
+        # caffe.set_mode_gpu() 
         # caffe.set_device(GPU_ID)
+        pass
     else:
         display('error: invalid set_mode value')
 
