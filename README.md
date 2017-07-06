@@ -1,6 +1,6 @@
 # ann4brains
 
-ann4brains implements filters for adjacency matrices representing networks that can be used within a deep neural network. These filters are designed specifically for brain networks (i.e. connectomes), but can be used with adjacency matrices representing networks of any kind. 
+ann4brains implements filters for **adjacency matrices**, representing networks, that can be used within a deep neural network. These filters are designed specifically for brain networks (i.e. connectomes), but can be used with adjacency matrices representing networks of any kind. 
 
 If your dataset is raw connectivity data (e.g., diffusion or functional MRI volumes), you will need to first extract brain networks (i.e., 2D adjacency matrices) from this data using other software (e.g., the Connectome Computation System, https://github.com/zuoxinian/CCS or the HCP Connectome Toolbox, http://www.humanconnectome.org/software/)
 
@@ -42,7 +42,7 @@ hello_arch = [ # We specify the architecture like this.
 hello_net = BrainNetCNN('hello_world', hello_arch) # Create BrainNetCNN model
 hello_net.fit(x_train, y_train[:,0], x_valid, y_valid[:,0]) # Train (regress only on class 0)
 preds = hello_net.predict(x_test) # Predict labels of test data
-print("Correlation:", pearsonr(preds, y_test[:,0])[0])
+print("Correlation:", pearsonr(preds, y_test[:,0])[0]) # ('Correlation:', 0.61187756)
 ```
 
 More examples can be found in this [extended notebook](https://github.com/jeremykawahara/ann4brains/blob/master/examples/brainnetcnn.ipynb).
@@ -80,7 +80,7 @@ python helloworld.py
 
 This example will create synthetic data, train a small neural network, and should output the correlation of:
 ```
-('Correlation:', 0.63340843)
+('Correlation:', 0.61187756)
 ```
 
 More examples are in this [extended notebook](https://github.com/jeremykawahara/ann4brains/blob/master/examples/brainnetcnn.ipynb).
