@@ -92,3 +92,20 @@ More examples are in this [extended notebook](https://github.com/jeremykawahara/
 ## Working directly with Caffe
 
 If you prefer to work directly with [Caffe](https://github.com/BVLC/caffe) and not use this wrapper, you can modify the [example prototxt files](https://github.com/jeremykawahara/ann4brains/tree/master/examples/proto) that implement the E2E and E2N filters. Or view the [Python files](https://github.com/jeremykawahara/ann4brains/blob/master/ann4brains/layers.py) that generate the E2E and E2N layers.
+
+------------------
+## What are these filters?
+I wrote a [short blog post informally describing these filters](https://kawahara.ca/convolutional-neural-networks-for-adjacency-matrices/) and this work, which you may find helpful. But here are the key ideas (in the form of a gif):
+### Edge-to-Edge
+![edge to edge filter](https://i2.wp.com/kawahara.ca/wp-content/uploads/edge-to-edge-filter.gif?w=600 "Edge-to-Edge")
+
+(Left) The input. (Yellow cross) the filter. (Right) The output response.
+
+The Edge-to-Edge filter computes a weighted response over neighbouring edges for a given edge.
+
+### Edge-to-Node
+![edge to node filter](https://i0.wp.com/kawahara.ca/wp-content/uploads/edge-to-node-filter.gif?w=600 "Edge to Node")
+
+(Left) The input. (Yellow cross) the filter. (Right) The output response.
+
+The Edge-to-Node filter computes a weighted response over neighbouring edges for a given node.
