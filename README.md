@@ -109,3 +109,6 @@ The Edge-to-Edge filter computes a weighted response over neighbouring edges for
 (Left) The input. (Yellow cross) the filter. (Right) The output response.
 
 The Edge-to-Node filter computes a weighted response over neighbouring edges for a given node.
+
+## More information
+![image](https://drive.google.com/uc?export=view&id=1ByMOk2CilJlK5p3UTtw-PnG7gpq0-uAyvKH7mmjDLlc)
