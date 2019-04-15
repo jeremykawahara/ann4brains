@@ -112,7 +112,7 @@ The Edge-to-Node filter computes a weighted response over neighbouring edges for
 
 ## More information
 
-### Poster
+### Poster (click to view high resolution)
 [![brainnet poster](https://docs.google.com/drawings/d/e/2PACX-1vT5zYGUFrUx_l62GM_GVpcTkZRALyWVshWszBmbSE6OQst2E9XNbfuOmqjArljuU8jmDrgV_MAugcQ_/pub?w=1536&h=1536 "poster")](https://docs.google.com/drawings/d/1ByMOk2CilJlK5p3UTtw-PnG7gpq0-uAyvKH7mmjDLlc/)
 
 
