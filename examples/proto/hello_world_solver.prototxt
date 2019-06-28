@@ -2,13 +2,13 @@ train_net: "./proto/hello_world_train.prototxt"
 test_net: "./proto/hello_world_test.prototxt"
 test_iter: 100
 test_interval: 100
-base_lr: 0.01
+base_lr: 0.009999999776482582
 display: 100
 max_iter: 2000
 lr_policy: "step"
-gamma: 0.1
-momentum: 0.9
-weight_decay: 0.0005
+gamma: 0.10000000149011612
+momentum: 0.8999999761581421
+weight_decay: 0.0005000000237487257
 stepsize: 100000
 snapshot: 1000
 snapshot_prefix: "./snapshot/hello_world"

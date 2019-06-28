@@ -4,7 +4,7 @@ layer {
   top: "data"
   top: "label"
   hdf5_data_param {
-    source: "/local-scratch/jer/projects/ann4brains/examples/generated_synthetic_data/valid.h5.txt"
+    source: "/users/PZS0712/amarcum/my-ann4brains/examples/generated_synthetic_data/valid.h5.txt"
     batch_size: 1
   }
 }
@@ -14,12 +14,12 @@ layer {
   bottom: "data"
   top: "e2n"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   convolution_param {
     num_output: 16
@@ -29,7 +29,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
     kernel_h: 1
     kernel_w: 90
@@ -50,7 +50,7 @@ layer {
   bottom: "e2n"
   top: "e2n"
   relu_param {
-    negative_slope: 0.33
+    negative_slope: 0.33000001311302185
   }
 }
 layer {
@@ -59,12 +59,12 @@ layer {
   bottom: "e2n"
   top: "fc"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   inner_product_param {
     num_output: 30
@@ -73,7 +73,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
 }
@@ -83,7 +83,7 @@ layer {
   bottom: "fc"
   top: "fc"
   relu_param {
-    negative_slope: 0.33
+    negative_slope: 0.33000001311302185
   }
 }
 layer {
@@ -92,12 +92,12 @@ layer {
   bottom: "fc"
   top: "out"
   param {
-    lr_mult: 1
-    decay_mult: 1
+    lr_mult: 1.0
+    decay_mult: 1.0
   }
   param {
-    lr_mult: 2
-    decay_mult: 0
+    lr_mult: 2.0
+    decay_mult: 0.0
   }
   inner_product_param {
     num_output: 1
@@ -106,7 +106,7 @@ layer {
     }
     bias_filler {
       type: "constant"
-      value: 0
+      value: 0.0
     }
   }
 }
