@@ -2,17 +2,17 @@ from __future__ import print_function
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-import cPickle
+import pickle as cPickle
 import caffe
 from caffe.proto import caffe_pb2
 from caffe import layers as L
-from layers import e2e_conv, e2n_conv, full_connect
-from optimizers import caffe_SGD
-from utils import h5_utils
+from ann4brains.layers import e2e_conv, e2n_conv, full_connect
+from ann4brains.optimizers import caffe_SGD
+from ann4brains.utils import h5_utils
 # import abc
 # import six
-from utils.h5_utils import caffe_write_h5
-from utils.metrics import regression_metrics
+from ann4brains.utils.h5_utils import caffe_write_h5
+from ann4brains.utils.metrics import regression_metrics
 
 
 def load_model(filepath):
