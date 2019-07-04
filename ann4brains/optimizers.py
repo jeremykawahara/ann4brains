@@ -23,7 +23,7 @@ def caffe_SGD(solver_filename, niter, test_interval, test_iter,
     # num_metrics = solver.net.blobs[pred_layer_id].data.shape[1] + 1
 
     if start_weights_name != None:
-        print 'starting from: ' + start_weights_name
+        print('starting from: ', start_weights_name)
         solver.restore(start_weights_name)
         # solver.net.copy_from(start_weights_name)
 
