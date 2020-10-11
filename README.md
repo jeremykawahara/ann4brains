@@ -8,6 +8,12 @@ ann4brains is a Python wrapper for [Caffe](https://github.com/BVLC/caffe) that i
 
 > Kawahara, J., Brown, C. J., Miller, S. P., Booth, B. G., Chau, V., Grunau, R. E., Zwicker, J. G., and Hamarneh, G. (2017). BrainNetCNN: Convolutional neural networks for brain networks; towards predicting neurodevelopment. NeuroImage, 146(July), 1038–1049. [[DOI]](https://doi.org/10.1016/j.neuroimage.2016.09.046) [[URL]](http://brainnetcnn.cs.sfu.ca/) [[PDF]](http://www.cs.sfu.ca/~hamarneh/ecopy/neuroimage2016.pdf)
 
+
+------------------
+## Other Implementations
+
+If you're looking for an implementation using a different library, BrainNetCNN has been implemented by other groups (thank you!) in [PyTorch](https://github.com/nicofarr/brainnetcnnVis_pytorch) and [Keras](https://notebook.community/AmineEch/BrainCNN/.ipynb_checkpoints/BrainNetCNN-checkpoint).
+
 ------------------
 
 ## Hello World
